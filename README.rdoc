@@ -6,28 +6,28 @@ Persistize is a Rails plugin for easy denormalization. It works just like +memoi
     def full_name
       "#{first_name} #{last_name}"
     end
-  
+
     persistize :full_name
   end
-  
+
   ...
-  
+
   Person.create(:first_name => 'Jimi', :last_name => 'Hendrix')
   Person.find_by_full_name('Jimi Hendrix') # #<Person id:1, first_name:"Jimi", last_name:"Hendrix", full_name:"Jimi Hendrix" ...>
-  
+
 ==Dependency
 
 Sometimes you want to update the field not when the record is changed, but when some other associated records are. For example:
 
   class Project < ActiveRecord::Base
     has_many :tasks
-  
+
     def completed?
       tasks.any? && tasks.all?(&:completed?)
     end
-  
+
     persistize :completed?, :depending_on => :tasks
-  
+
     named_scope :completed, :conditions => { :completed => true }
   end
 
@@ -38,12 +38,12 @@ Sometimes you want to update the field not when the record is changed, but when 
   ...
 
   project = Project.create(:name => 'Rails')
-  task = project.tasks.create(:name => 'Make it scale', :completed => false)    
+  task = project.tasks.create(:name => 'Make it scale', :completed => false)
   Project.completed  # []
 
   task.update_attributes(:completed => true)
   Project.completed  # [#<Project id:1, name:"Rails", completed:true ...>]
-    
+
 You can add more than one dependency using an array:
 
   persistize :summary, :depending_on => [:projects, :people, :tasks]
@@ -55,11 +55,11 @@ These examples are just some of the possible applications of this pattern, your 
 Just add it to your +Gemfile+:
 
   gem "persistize"
-  
+
 And run:
 
   $ bundle install
-  
+
 ==To-do
 
 * Make cache optional (cache can cause records to be inconsistent if changed and not saved so it would be nice to be able to deactivate it)
