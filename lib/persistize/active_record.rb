@@ -2,6 +2,20 @@ module Persistize
   mattr_accessor :performant
   self.performant = true
 
+  @@enable = true
+
+  def self.disable
+    @@enable = false
+  end
+
+  def self.enable
+    @@enable = true
+  end
+
+  def self.enabled?
+    @@enable
+  end
+
   module ActiveRecord
     module ClassMethods
       def persistize(*args)
@@ -19,7 +33,7 @@ module Persistize
             alias #{original_method} #{method}                    # alias _unpersistized_full_name full_name
                                                                   #
             def #{method}                                         # def full_name
-              if new_record? || changed?                          #   if new_record? || changed?
+              if new_record? || changed? || !::Persistize.enabled?
                 #{original_method}                                #     _unpersistized_full_name
               else                                                #   else
                 self[:#{attribute}]                               #     self[:full_name]
@@ -30,11 +44,13 @@ module Persistize
             before_update :#{update_method}, :if => :changed?     # before_update :_update_full_name, :if => :changed?
                                                                   #
             def #{update_method}                                  # def _update_full_name
+              return unless ::Persistize.enabled?
               self[:#{attribute}] = #{original_method}            #   self[:full_name] = _unpersistized_full_name
               true # return true to avoid canceling the save      #   true
             end                                                   # end
                                                                   #
             def #{update_method}!                                 # def _update_full_name!
+              return unless ::Persistize.enabled?
               if #{performant}                                    #   if performant
                 new_#{attribute} = #{original_method}             #     new_full_name = _unpersistized_full_name
                 return if new_#{attribute} == self[:#{attribute}] #     return if new_full_name == self[:full_name]
