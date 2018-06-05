@@ -147,6 +147,34 @@ class PersistizeTest < Minitest::Test
         assert_equal "Tomas hasn't told us where he lives", @person.reload[:city_sentence]
       end
     end
-  end
 
+    context "disabling Persistize" do
+      setup do
+        Persistize.disable
+        @person = Person.create!(:first_name => "Bertrand", :last_name => "Russell")
+      end
+
+      teardown do
+        Persistize.enable
+      end
+
+      should "not update full_name" do
+        assert_nil @person[:full_name]
+      end
+
+      should "call function as usual" do
+        @person.update_attributes!(:full_name => "cached full name")
+        @person.first_name = "Frank"
+        @person.save
+        assert_equal "Frank Russell", @person.full_name
+      end
+
+      should "allow access to db backed value" do
+        @person.update_attributes!(:full_name => "cached full name")
+        @person.first_name = "Frank"
+        @person.save
+        assert_equal "cached full name", @person[:full_name]
+      end
+    end
+  end
 end
